@@ -191,6 +191,12 @@ $("#find-btn").on("click", () => {
   $("#location").val("");
 });
 
+$("#location").on("keypress", (event) => {
+  if (event.which === 13) {
+    $("#find-btn").click();
+  }
+});
+
 async function main() {
   await apiCall();
 }
