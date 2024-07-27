@@ -67,12 +67,13 @@ function getWindDir(wind_degree) {
   return "Northerly";
 }
 
-async function apiCall() {
+async function apiCall(place = "cairo") {
   forecast = await fetch(
-    "http://api.weatherapi.com/v1/forecast.json?key=095f6f84e65b44ba9c735801242407&q=cairo&days=3"
+    `http://api.weatherapi.com/v1/forecast.json?key=095f6f84e65b44ba9c735801242407&q=${place}&days=3`
   ).then((res) => res.json());
 
   forecast = getNeededValues();
+  displayData();
 }
 
 function getDay(date) {
@@ -184,9 +185,14 @@ function displayData() {
   });
 }
 
+$("#find-btn").on("click", () => {
+  let place = $("#location").val();
+  apiCall(place);
+  $("#location").val("");
+});
+
 async function main() {
   await apiCall();
-  displayData();
 }
 
 main();
