@@ -8,6 +8,20 @@ const dayNames = [
   "Friday",
   "Saturday",
 ];
+const monthNames = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
 
 function toggleVisibility(shown) {
   let hidden = shown === "main" ? ".contact-main" : "main";
@@ -58,20 +72,25 @@ async function apiCall() {
     "http://api.weatherapi.com/v1/forecast.json?key=095f6f84e65b44ba9c735801242407&q=cairo&days=3"
   ).then((res) => res.json());
 
-  getNeededValues();
+  forecast = getNeededValues();
 }
 
 function getDay(date) {
   const dateObj = new Date(date);
-  return dateObj.getDay(); //returns the index of the day in the week starting from sunday
+  return dateObj.getDay();
+}
+
+function getMonth(date) {
+  const dateObj = new Date(date);
+  return dateObj.getMonth();
 }
 
 // Removes unwanted values from the JSON response
 function getNeededValues() {
-  let values = {};
+  let filteredValues = {};
 
   // Handeling Location Part of JSON Obj
-  values.address = `${forecast.location.name}, ${forecast.location.region}, ${forecast.location.country}`;
+  filteredValues.address = `${forecast.location.name}, ${forecast.location.region}, ${forecast.location.country}`;
 
   // Handeling Current Part of JSON Obj
   let current = {};
@@ -82,32 +101,92 @@ function getNeededValues() {
   current.wind_dir = getWindDir(forecast.current.wind_deg);
   current.wind_speed = forecast.current.wind_kph;
 
-  let todayIndex = getDay(forecast.forecast.forecastday[0].date);
-  current.day = dayNames[todayIndex];
+  current.day = dayNames[getDay(forecast.forecast.forecastday[0].date)];
+  current.month = monthNames[getMonth(forecast.forecast.forecastday[0].date)];
+  current.dayNum = forecast.forecast.forecastday[0].date.split("-")[2];
 
-  values.current = current;
+  filteredValues.current = current;
 
   // Handeling Forecast Part of JSON Obj
   const days = forecast.forecast.forecastday.slice(1);
   let daysForecast = [];
   for (let i = 0; i < days.length; i++) {
-    // daysForecast.push(days[i].day);
     let myDay = {};
     myDay.max_temp = days[i].day.maxtemp_c;
     myDay.min_temp = days[i].day.mintemp_c;
-    myDay.date = dayNames[getDay(days[i].date)];
+    myDay.day = dayNames[getDay(days[i].date)];
     myDay.condition = days[i].day.condition.text;
     myDay.icon = days[i].day.condition.icon;
     daysForecast.push(myDay);
   }
 
-  values.forecast = daysForecast;
+  filteredValues.forecast = daysForecast;
+  return filteredValues;
+}
 
-  console.log(values);
+function displayData() {
+  let curr = forecast.current;
+  let days = forecast.forecast;
+
+  let currentDayHTML = `
+  <div
+    class="card-header border-0 light-dark-header d-flex justify-content-between">
+    <span class="small">${curr.day}</span>
+    <span class="small">${curr.dayNum} ${curr.month}</span>
+  </div>
+  <div class="card-body">
+    <h5 class="card-title fs-6 text-body-secondary fw-normal">
+      ${forecast.address}
+    </h5>
+    <h2 class="fw-bold">${curr.temp}&deg;C</h2>
+    <img src="https:${curr.icon}" alt="" class="small-img" />
+    <div class="my-2 blue-text">${curr.condition}</div>
+    <div>
+      <span class="me-2">
+        <img
+          src="assets/images/icon-umberella.png"
+          alt="umbrella icon" />
+        <small class="text-body-secondary"> ${curr.humidity}% </small>
+      </span>
+      <span class="me-2">
+        <img src="assets/images/icon-wind.png" alt="wind icon" />
+        <small class="text-body-secondary"> ${curr.wind_speed} Km/H </small>
+      </span>
+      <span class="me-2">
+        <img
+          src="assets/images/icon-compass.png"
+          alt="compass icon" />
+        <small class="text-body-secondary"> ${curr.wind_dir} </small>
+      </span>
+    </div>
+  </div>
+  `;
+
+  let currentDay = $(".current-day");
+  currentDay.html(currentDayHTML);
+  let otherCards = $("main .card").not(".current-day");
+
+  otherCards.each((i, card) => {
+    let cardHTML = `
+        <div class="card-header dark-header border-0 text-center">
+          ${days[i].day}
+        </div>
+        <div
+          class="card-body text-center d-flex align-items-center justify-content-center flex-column">
+          <img src="https:${days[i].icon}" class="xsmall-img" />
+          <h5 class="card-title fw-bold fs-3 mb-0">${days[i].max_temp}&deg;C</h5>
+          <small class="text-body-secondary mb-3">${days[i].min_temp}&deg;</small>
+          <small class="blue-text">${days[i].condition}</small>
+        </div>
+    `;
+
+    card.innerHTML = cardHTML;
+  });
 }
 
 async function main() {
   await apiCall();
+  displayData();
 }
 
 main();
