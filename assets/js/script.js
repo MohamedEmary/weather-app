@@ -1,27 +1,4 @@
 let forecast;
-const dayNames = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-];
-const monthNames = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
 
 function toggleVisibility(shown) {
   let hidden = shown === "main" ? ".contact-main" : "main";
@@ -81,9 +58,14 @@ function getDay(date) {
   return dateObj.getDay();
 }
 
-function getMonth(date) {
-  const dateObj = new Date(date);
-  return dateObj.getMonth();
+function getDayName(dateString) {
+  const date = new Date(dateString);
+  return date.toLocaleString("en", { weekday: "long" });
+}
+
+function getMonthName(dateString) {
+  const date = new Date(dateString);
+  return date.toLocaleString("en", { month: "long" });
 }
 
 // Removes unwanted values from the JSON response
@@ -102,8 +84,8 @@ function getNeededValues() {
   current.wind_dir = getWindDir(forecast.current.wind_deg);
   current.wind_speed = forecast.current.wind_kph;
 
-  current.day = dayNames[getDay(forecast.forecast.forecastday[0].date)];
-  current.month = monthNames[getMonth(forecast.forecast.forecastday[0].date)];
+  current.day = getDayName(forecast.forecast.forecastday[0].date);
+  current.month = getMonthName(forecast.forecast.forecastday[0].date);
   current.dayNum = forecast.forecast.forecastday[0].date.split("-")[2];
 
   filteredValues.current = current;
@@ -115,7 +97,7 @@ function getNeededValues() {
     let myDay = {};
     myDay.max_temp = days[i].day.maxtemp_c;
     myDay.min_temp = days[i].day.mintemp_c;
-    myDay.day = dayNames[getDay(days[i].date)];
+    myDay.day = getDayName(days[i].date);
     myDay.condition = days[i].day.condition.text;
     myDay.icon = days[i].day.condition.icon;
     daysForecast.push(myDay);
