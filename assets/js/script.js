@@ -44,7 +44,7 @@ function getWindDir(wind_degree) {
   return "Northerly";
 }
 
-async function apiCall(place = "cairo") {
+async function apiCall(place) {
   forecast = await fetch(
     `http://api.weatherapi.com/v1/forecast.json?key=095f6f84e65b44ba9c735801242407&q=${place}&days=3`
   ).then((res) => res.json());
@@ -179,8 +179,27 @@ $("#location").on("keypress", (event) => {
   }
 });
 
+async function getLocation() {
+  try {
+    // Get exact location of user using GPS
+    if (navigator.geolocation) {
+      const position = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject);
+      });
+      const latitude = await position.coords.latitude;
+      const longitude = await position.coords.longitude;
+      return `${latitude},${longitude}`;
+    }
+  } catch {
+    // If user denies access to GPS, use user timezone
+    let loc = Intl.DateTimeFormat().resolvedOptions().timeZone.split("/")[1];
+    return loc;
+  }
+}
+
 async function main() {
-  await apiCall();
+  let loc = await getLocation();
+  await apiCall(loc);
 }
 
 main();
